@@ -1,0 +1,13 @@
+version: '3'
+services:
+  db:
+    image: mysql:9.2.0
+    restart: always
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: admin
+      MYSQL_DATABASE: admin
+    container_name: indrivedb
+    volumes:
+      - ./mysql:/var/lib/mysql # Cambiado a la ruta de datos de MySQL
