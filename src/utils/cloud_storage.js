@@ -7,7 +7,7 @@ const uuid = uuidv4();
 
 const storage = new Storage({
     projectId: "indrive-project-cc98b",
-    // keyFilename: './serviceAccountKey.json'
+    keyFilename: './serviceAccountKey.json'
 });
 
 const bucket = storage.bucket("gs://indrive-project-cc98b.firebasestorage.app/");
