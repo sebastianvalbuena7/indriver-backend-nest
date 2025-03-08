@@ -20,6 +20,9 @@ lerna-debug.log*
 /.nyc_output
 
 serviceAccountKey.json
+/serviceAccountKey.json
+.serviceAccountKey.json
+cloud_storage.js
 
 # IDEs and editors
 /.idea
