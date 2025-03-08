@@ -7,7 +7,7 @@ const uuid = uuidv4();
 
 const storage = new Storage({
     projectId: "",
-    keyFilename: './serviceAccountKey.json'
+    keyFilename: ''
 });
 
 const bucket = storage.bucket("");
