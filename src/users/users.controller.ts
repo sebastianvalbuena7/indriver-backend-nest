@@ -1,9 +1,13 @@
 import { Body, Controller, FileTypeValidator, Get, MaxFileSizeValidator, Param, ParseFilePipe, ParseIntPipe, Post, Put, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UsersService } from './users.service';
-import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { JwtAuthGuard } from 'src/auth/jwt/jwt-auth.guard';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { ParseAndValidateUserPipe } from './ParseAndValidateUserPipe.pipe';
+import { JwtRolesGuard } from 'src/auth/jwt/jwt-roles.guard';
+import { HasRoles } from 'src/auth/jwt/has-roles';
+import { JwtRole } from 'src/auth/jwt/jwt-rol';
 
 @Controller('users')
 export class UsersController {
@@ -16,7 +20,8 @@ export class UsersController {
         return this.userService.create(user);
     }
 
-    @UseGuards(JwtAuthGuard)
+    @HasRoles(JwtRole.ADMIN)
+    @UseGuards(JwtAuthGuard, JwtRolesGuard)
     @Get()
     allUsers() {
         return this.userService.findAll();
@@ -29,17 +34,20 @@ export class UsersController {
     }
 
     @UseGuards(JwtAuthGuard)
-    @Post('upload')
+    @Post('upload/:id')
     @UseInterceptors(FileInterceptor('file'))
-    uploadFile(@UploadedFile(
-        new ParseFilePipe({
-            validators: [
-                new MaxFileSizeValidator({ maxSize: 1024 * 1024 * 10 }),
-                new FileTypeValidator({ fileType: '.(png|jpeg|jpg)' })
-            ]
-        })
-    ) file: Express.Multer.File) {
-        return this.userService.updateWithImage(file);
+    async updateWithImage(
+        @UploadedFile(
+            new ParseFilePipe({
+                validators: [
+                    new MaxFileSizeValidator({ maxSize: 1024 * 1024 * 10 }),
+                    new FileTypeValidator({ fileType: '.(png|jpeg|jpg)' })
+                ]
+            })
+        ) file: Express.Multer.File,
+        @Param('id', ParseIntPipe) id: number,
+        @Body(ParseAndValidateUserPipe) user: any
+    ) {
+        return this.userService.updateWithImage(file, id, user as UpdateUserDto);
     }
-
 }

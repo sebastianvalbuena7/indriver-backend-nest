@@ -1,17 +1,19 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/users/user.entity';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { RegisterAuthDto } from './dto/register-auth.dto';
 import { LoginAuthDto } from './dto/login-auth.dto';
 import { compare } from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
+import { Rol } from 'src/roles/rol.entity';
 
 @Injectable()
 export class AuthService {
 
     constructor(
         @InjectRepository(User) private usersRepository: Repository<User>,
+        @InjectRepository(Rol) private rolesRepository: Repository<Rol>,
         private jwtService: JwtService
     ) { }
 
@@ -27,6 +29,15 @@ export class AuthService {
         if (phoneExist) throw new HttpException('El telefono ya está reegistrado', HttpStatus.CONFLICT);
 
         const newUser = this.usersRepository.create(user);
+
+        const rolesIds = user.rolesIds;
+        const roles = await this.rolesRepository.findBy(
+            {
+                id: In(rolesIds)
+            }
+        );
+
+        newUser.roles = roles;
 
         const userSaved = await this.usersRepository.save(newUser);
 
@@ -50,7 +61,10 @@ export class AuthService {
     async login(login: LoginAuthDto) {
         const { email, password } = login;
 
-        const userFound = await this.usersRepository.findOneBy({ email });
+        const userFound = await this.usersRepository.findOne({
+            where: { email },
+            relations: ['roles']
+        });
 
         if (!userFound)
             return new HttpException('El email no existe', HttpStatus.NOT_FOUND);
@@ -60,10 +74,13 @@ export class AuthService {
         if (!isPasswordValid)
             return new HttpException('No tiene permisos', HttpStatus.FORBIDDEN);
 
+        const rolesIds: string[] = userFound.roles.map(rol => rol.id);
+
         // * Firma para el token, debe tener los mismos vamos que en Jwt.strategy.ts en el metodo validate
         const payload = {
             id: userFound.id,
-            name: userFound.name
+            name: userFound.name,
+            roles: rolesIds
         }
 
         const token = this.jwtService.sign(payload);
