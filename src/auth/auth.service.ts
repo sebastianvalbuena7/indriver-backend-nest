@@ -30,7 +30,11 @@ export class AuthService {
 
         const newUser = this.usersRepository.create(user);
 
-        const rolesIds = user.rolesIds;
+        let rolesIds = [];
+
+        if (user.rolesIds !== undefined && user.rolesIds !== null) rolesIds = user.rolesIds;
+        else rolesIds.push('CLIENT');
+
         const roles = await this.rolesRepository.findBy(
             {
                 id: In(rolesIds)
@@ -40,10 +44,12 @@ export class AuthService {
         newUser.roles = roles;
 
         const userSaved = await this.usersRepository.save(newUser);
+        const rolesString = userSaved.roles.map(rol => rol.id);
 
         const payload = {
             id: userSaved.id,
-            name: userSaved.name
+            name: userSaved.name,
+            roles: rolesString
         }
 
         const token = this.jwtService.sign(payload);
@@ -67,12 +73,12 @@ export class AuthService {
         });
 
         if (!userFound)
-            return new HttpException('El email no existe', HttpStatus.NOT_FOUND);
+            throw new HttpException('El email no existe', HttpStatus.NOT_FOUND);
 
         const isPasswordValid = await compare(password, userFound.password);
 
         if (!isPasswordValid)
-            return new HttpException('No tiene permisos', HttpStatus.FORBIDDEN);
+            throw new HttpException('No tiene permisos', HttpStatus.FORBIDDEN);
 
         const rolesIds: string[] = userFound.roles.map(rol => rol.id);
 

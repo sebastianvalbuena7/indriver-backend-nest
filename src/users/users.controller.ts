@@ -20,19 +20,21 @@ export class UsersController {
         return this.userService.create(user);
     }
 
-    @HasRoles(JwtRole.ADMIN)
+    @HasRoles(JwtRole.ADMIN, JwtRole.CLIENT)
     @UseGuards(JwtAuthGuard, JwtRolesGuard)
     @Get()
     allUsers() {
         return this.userService.findAll();
     }
 
+    @HasRoles(JwtRole.CLIENT)
     @UseGuards(JwtAuthGuard)
     @Put(':id')
     update(@Param('id', ParseIntPipe) id: number, @Body() user: UpdateUserDto) {
         return this.userService.update(id, user);
     }
 
+    @HasRoles(JwtRole.CLIENT)
     @UseGuards(JwtAuthGuard)
     @Post('upload/:id')
     @UseInterceptors(FileInterceptor('file'))
