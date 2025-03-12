@@ -1,5 +1,4 @@
-import { Type } from "class-transformer";
-import { ArrayMaxSize, IsArray, IsEmail, IsNotEmpty, IsString, MinLength, ValidateNested } from "class-validator";
+import { IsEmail, IsNotEmpty, IsString, MinLength } from "class-validator";
 
 export class RegisterAuthDto {
     @IsNotEmpty()
@@ -26,7 +25,5 @@ export class RegisterAuthDto {
     })
     password: string;
 
-    @IsArray()
-    @ArrayMaxSize(2)
     rolesIds: string[];
 }
